@@ -176,19 +176,41 @@ namespace htd
             splice_after(pos, std::move(list), first, last);
         }
         void splice_after(const_iterator pos, forward_list &&list, const_iterator first, const_iterator last) noexcept;
+        void remove(const value_type &val);
+        template <typename _Pred>
+        void remove_if(_Pred pred);
+        void unique() { unique(std::equal_to<value_type>()); }
+        template <typename _Bin_Pred>
+        void unique(_Bin_Pred pred);
+        void merge(forward_list &list) { merge(std::move(list)); }
+        void merge(forward_list &&list) { merge(list, std::less<value_type>()); }
+        template <typename _Comp>
+        void merge(forward_list &list, _Comp comp) { merge(std::move(list), comp); }
+        template <typename _Comp>
+        void merge(forward_list &&list, _Comp comp);
+        void sort() { sort(std::less<value_type>()); }
+        template <typename _Comp>
+        void sort(_Comp comp)
+        {
+            link_node tmp;
+            quick_sort(head->next, tmp, comp);
+        }
+        void reverse() noexcept;
 
     private:
-        template <typename _Input_itor>
-        void initializer_by_range(_Input_itor first, _Input_itor last);
-        template <typename... _Args>
-        struct forward_list_node<_Ty> *m_insert_after(const_iterator pos, _Args &&... args);
-
         using link_node_value = struct forward_list_node<value_type>;
         using link_node = link_node_value *;
         using tp_alloc_type = typename __gnu_cxx::__alloc_traits<allocator_type>::template rebind<value_type>::other;
         using alloc_traits = __gnu_cxx::__alloc_traits<tp_alloc_type>;
         using node_alloc_type = typename alloc_traits::template rebind<link_node_value>::other;
         using node_alloc_traits = __gnu_cxx::__alloc_traits<node_alloc_type>;
+
+        template <typename _Input_itor>
+        void initializer_by_range(_Input_itor first, _Input_itor last);
+        template <typename... _Args>
+        link_node m_insert_after(const_iterator pos, _Args &&... args);
+        template <typename _Comp>
+        void quick_sort(link_node &start, link_node &end, _Comp comp);
 
         link_node head;
         tp_alloc_type value_allocater;
@@ -612,6 +634,102 @@ namespace htd
     }
 
     template <typename _Ty, typename _Alloc>
+    void forward_list<_Ty, _Alloc>::remove(const value_type &val)
+    {
+        link_node node = head;
+        link_node tmp = head;
+        link_node extra = nullptr;
+        while (tmp = node->next)
+        {
+            if (tmp->val == val)
+            {
+                if (&tmp->val != std::__addressof(val))
+                {
+                    erase_after(const_iterator(node));
+                    continue;
+                }
+                else
+                    extra = node;
+            }
+            node = node->next;
+        }
+        if (extra)
+            erase_after(const_iterator(extra));
+    }
+
+    template <typename _Ty, typename _Alloc>
+    template <typename _Pred>
+    void forward_list<_Ty, _Alloc>::remove_if(_Pred pred)
+    {
+        link_node node = head;
+        link_node tmp = head;
+        while (tmp = node->next)
+        {
+            if (pred(tmp->val))
+            {
+                erase_after(const_iterator(node));
+                continue;
+            }
+            node = node->next;
+        }
+    }
+
+    template <typename _Ty, typename _Alloc>
+    template <typename _Bin_Pred>
+    void forward_list<_Ty, _Alloc>::unique(_Bin_Pred pred)
+    {
+        iterator first = begin();
+        iterator last = end();
+        if (first == last)
+            return;
+        iterator next = first;
+        while (++next != last)
+        {
+            if (pred(*first, *next))
+                erase_after(first);
+            else
+                first = next;
+            next = first;
+        }
+    }
+
+    template <typename _Ty, typename _Alloc>
+    template <typename _Comp>
+    void forward_list<_Ty, _Alloc>::merge(forward_list &&list, _Comp comp)
+    {
+        link_node node = head;
+        link_node list_node = list.head;
+        while (node->next && list_node->next)
+        {
+            if (comp(node->next->val, list_node->next->val))
+                splice_after(const_iterator(node), list, const_iterator(list_node));
+            node = node->next;
+        }
+        if (list_node->next)
+        {
+            node->next = list_node->next;
+            list_node->next = nullptr;
+        }
+    }
+
+    template <typename _Ty, typename _Alloc>
+    void forward_list<_Ty, _Alloc>::reverse() noexcept
+    {
+        bool start = true;
+        link_node node = head->next;
+        link_node next = node;
+        link_node tail = nullptr;
+        while (node)
+        {
+            next = node->next;
+            node->next = tail;
+            tail = node;
+            node = next;
+        }
+        head->next = tail;
+    }
+
+    template <typename _Ty, typename _Alloc>
     template <typename _Input_itor>
     void forward_list<_Ty, _Alloc>::initializer_by_range(_Input_itor first, _Input_itor last)
     {
@@ -628,10 +746,9 @@ namespace htd
         }
     }
 
-    // typename forward_list<_Ty, _Alloc>::link_node
     template <typename _Ty, typename _Alloc>
     template <typename... _Args>
-    struct forward_list_node<_Ty> *forward_list<_Ty, _Alloc>::m_insert_after(const_iterator pos, _Args &&... args)
+    typename forward_list<_Ty, _Alloc>::link_node forward_list<_Ty, _Alloc>::m_insert_after(const_iterator pos, _Args &&... args)
     {
         link_node tmp = const_cast<link_node>(pos.node);
         link_node node = node_allocater.allocate(1);
@@ -639,5 +756,76 @@ namespace htd
         node->next = tmp->next;
         tmp->next = node;
         return node;
+    }
+
+    template <typename _Ty, typename _Alloc>
+    template <typename _Comp>
+    void forward_list<_Ty, _Alloc>::quick_sort(link_node &start, link_node &end, _Comp comp)
+    {
+        if (nullptr == start || nullptr == start->next)
+            return;
+        auto &key = start->val;
+        link_node node = start->next;
+        start->next = nullptr;
+        link_node less_list_start = nullptr;
+        link_node less_list_end = nullptr;
+        link_node greater_list_start = nullptr;
+        link_node greater_list_end = nullptr;
+
+        while (node)
+        {
+            if (comp(node->val, key))
+            {
+                if (!less_list_start)
+                {
+                    less_list_start = node;
+                    less_list_end = node;
+                }
+                else
+                {
+                    less_list_end->next = node;
+                    less_list_end = node;
+                }
+                node = node->next;
+                less_list_end->next = nullptr;
+            }
+            else
+            {
+                if (!greater_list_start)
+                {
+                    greater_list_start = node;
+                    greater_list_end = node;
+                }
+                else
+                {
+                    greater_list_end->next = node;
+                    greater_list_end = node;
+                }
+                node = node->next;
+                greater_list_end->next = nullptr;
+            }
+        }
+
+        quick_sort(less_list_start, less_list_end, comp);
+        quick_sort(greater_list_start, greater_list_end, comp);
+
+        if (less_list_end && greater_list_start)
+        {
+            less_list_end->next = start;
+            start->next = greater_list_start;
+            start = less_list_start;
+            end = greater_list_end;
+        }
+        else if (less_list_end)
+        {
+            less_list_end->next = start;
+            end = start;
+            start = less_list_start;
+        }
+        else if (greater_list_start)
+        {
+            start->next = greater_list_start;
+            end = greater_list_end;
+        }
     }
 } // namespace htd
