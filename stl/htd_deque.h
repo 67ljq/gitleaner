@@ -5,7 +5,6 @@
 #include <iterator>
 #include <exception>
 #include <initializer_list>
-#include <iostream>
 
 namespace htd
 {
@@ -269,7 +268,7 @@ namespace htd
         deque();
         deque(size_type _n);
         deque(size_type _n, const value_type &_value);
-        template <typename _Input_iter>
+        template <typename _Input_iter, typename = std::_RequireInputIter<_Input_iter>>
         deque(_Input_iter first, _Input_iter last);
         deque(std::initializer_list<value_type> _l);
         deque(const deque &_x);
@@ -400,7 +399,7 @@ namespace htd
     }
 
     template <typename _Ty, typename _Alloc>
-    template <typename _Input_iter>
+    template <typename _Input_iter, typename>
     deque<_Ty, _Alloc>::deque(_Input_iter first, _Input_iter last)
     {
         _M_initialize(last - first);
