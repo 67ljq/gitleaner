@@ -3,8 +3,8 @@
 - [socket 编程](#socket-编程)
 - [tcp编程](#tcp编程)
     - [tcp报文格式](#tcp报文格式)
-    - [tcp三次握手，四次挥手](#tcp三次握手四次挥手)
-    - [reference](#reference)
+    - [tcp三次握手四次挥手](#tcp三次握手四次挥手)
+- [reference](#reference)
 
 <!-- /TOC -->
 
@@ -85,7 +85,7 @@
 
  - 选项和填充(Options and Padding)
  
-## tcp三次握手，四次挥手
+## tcp三次握手四次挥手
  - 三次握手
 
    ![three-way handshake](three-way_handshake.png)
@@ -141,7 +141,7 @@
 
      设置这个状态的目的是保证最后一个应答server端能够正确接收到，因为网络 的不稳定性，最后一个应答可能会丢失。Server如果没有收到ACK，将不断重复发送FIN片段。所以Client不能立即关闭，它必须确认Server接收到了该ACK。Client会在发送出ACK之后进入到TIME_WAIT状态。Client会设置一个计时器，等待2MSL的时间。如果在该时间内再次收到FIN，那么Client会重发ACK并再次等待2MSL。所谓的2MSL是两倍的MSL(Maximum Segment Lifetime)。MSL指一个片段在网络中最大的存活时间，2MSL就是一个发送和一个回复所需的最大时间。如果直到2MSL，Client都没有再次收到FIN，那么Client推断ACK已经被成功接收，则结束TCP连接。
   
-## reference
+# reference
  - [TCP系列01—概述及协议头格式](https://www.cnblogs.com/lshs/p/6038458.html)
  - [TCP协议及帧格式](https://blog.csdn.net/marywang56/article/details/76151064?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-5.edu_weight&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-5.edu_weight)
  - [TCP报文格式详解](https://blog.csdn.net/paincupid/article/details/79726795)
