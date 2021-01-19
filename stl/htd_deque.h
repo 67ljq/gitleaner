@@ -347,11 +347,11 @@ namespace htd
         void swap(deque &x) noexcept;
         void clear() noexcept;
         template <typename... _Args>
-        iterator emplace(const_iterator pos, _Args &&... args);
+        iterator emplace(const_iterator pos, _Args &&...args);
         template <typename... _Args>
-        void emplace_back(_Args &&... args);
+        void emplace_back(_Args &&...args);
         template <typename... _Args>
-        void emplace_front(_Args &&... args);
+        void emplace_front(_Args &&...args);
 
     private:
         inline size_type per_buf_size() { return (sizeof(value_type) < deque_buf_size ? (deque_buf_size / sizeof(value_type)) : (1)); }
@@ -1015,7 +1015,7 @@ namespace htd
 
     template <typename _Ty, typename _Alloc>
     template <typename... _Args>
-    typename deque<_Ty, _Alloc>::iterator deque<_Ty, _Alloc>::emplace(const_iterator pos, _Args &&... args)
+    typename deque<_Ty, _Alloc>::iterator deque<_Ty, _Alloc>::emplace(const_iterator pos, _Args &&...args)
     {
         auto diff = pos - start;
 
@@ -1052,7 +1052,7 @@ namespace htd
 
     template <typename _Ty, typename _Alloc>
     template <typename... _Args>
-    void deque<_Ty, _Alloc>::emplace_back(_Args &&... args)
+    void deque<_Ty, _Alloc>::emplace_back(_Args &&...args)
     {
         if (finish._node == map + map_size)
         {
@@ -1065,7 +1065,7 @@ namespace htd
 
     template <typename _Ty, typename _Alloc>
     template <typename... _Args>
-    void deque<_Ty, _Alloc>::emplace_front(_Args &&... args)
+    void deque<_Ty, _Alloc>::emplace_front(_Args &&...args)
     {
         if (start._cur == start._start && start._node == map)
         {
