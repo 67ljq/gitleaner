@@ -110,6 +110,8 @@ void print_block (int n, char c) {
 
 #### 2.13、auto_ptr<font color="#80000">`（c++98）`</font>
 
+​		auto_ptr 已经不推荐使用了，因为有很大的弊端，通过分析其原理和优略性可以很快了解后面介绍的 shared_ptr 和 unique_ptr。auto_ptr 是用来管理指针指向的内存资源的，构造的时候直接传递要管理的内存即可，析构的时候会自动释放，我们无需关注。但仅仅管理还不够，就像`unique_lock`提供 try_lock 一样，它还要提供和原本的指针一样的功能，即要重载 * 操作符等。
+
 #### 2.14、shared_ptr
 
 #### 2.15、unique_ptr
