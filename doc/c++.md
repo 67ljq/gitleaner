@@ -112,6 +112,50 @@ void print_block (int n, char c) {
 
 ​		auto_ptr 已经不推荐使用了，因为有很大的弊端，通过分析其原理和优略性可以很快了解后面介绍的 shared_ptr 和 unique_ptr。auto_ptr 是用来管理指针指向的内存资源的，构造的时候直接传递要管理的内存即可，析构的时候会自动释放，我们无需关注。但仅仅管理还不够，就像`unique_lock`提供 try_lock 一样，它还要提供和原本的指针一样的功能，即要重载 * 操作符等。
 
+```c++
+#include <memcpy>
+int main()
+{
+	std::auto_ptr<int> p(new int(5));
+	printf("*p=%d\n", *p);
+    return 0;
+}
+```
+
+​		auto_ptr现在不推荐使用的原因是它本身的设计缺陷，它被设计为独占的，就是说如果要赋值给另一个变量的话它会转移控制权，而这个在函数调用时是非常致命的。
+
+```c++
+#include <memcpy>
+void testAutoPtr(std::auto_ptr<int> p){ printf("*p=%d\n", *p);}
+int main()
+{
+	std::auto_ptr<int> p1(new int(5));
+    testAutoPtr(p1);
+    printf("p1=%d\n", p1);		// 0
+	printf("*p1=%d\n", *p1);	// 错误，p1内部管理的指针已经被转移
+    return 0;
+}
+```
+
+​		因为其独占性，所有它也不能同时将一个指针赋值给两个auto_ptr
+
+```c++
+int* p = new int(90);
+std::auto_ptr<int> p1(p);
+std::auto_ptr<int> p2(p);// 会释放两次
+```
+
+​		然后它还被设计为可以再次转变回纯粹的指针，这个我觉得是很不合理的，很容易就混乱导致错误。
+
+```c++
+std::auto_ptr<int> p(new int(20));
+int *ptr = p.get();	// 获取了内部的指针，同时内部还保留管理权，ptr不能手动释放
+int *ptr1 = p.release();	// 释放了内部了管理权，需要手动释放ptr1
+delete ptr1;
+```
+
+​		auto_ptr有其致命的缺陷，而boost渐渐发展了功能更加明确并且安全性更强的几个智能指针，后来被参考纳入了标准形成了shared_ptr等。
+
 #### 2.14、shared_ptr
 
 #### 2.15、unique_ptr
