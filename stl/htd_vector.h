@@ -6,9 +6,8 @@
 #include <stdexcept>
 #include <algorithm>
 
-namespace ljq
+namespace htd
 {
-
     template <typename _Ty, typename _Alloc = std::allocator<_Ty>>
     class vector
     {
@@ -115,9 +114,9 @@ namespace ljq
             finish = start;
         }
         template <typename... _ARGS>
-        iterator emplace(const_iterator _position, _ARGS &&... _args);
+        iterator emplace(const_iterator _position, _ARGS &&..._args);
         template <typename... _ARGS>
-        void emplace_back(_ARGS &&... _args);
+        void emplace_back(_ARGS &&..._args);
 
     protected:
         pointer start;
@@ -656,7 +655,7 @@ namespace ljq
 
     template <class _Ty, typename _Alloc>
     template <typename... _ARGS>
-    typename vector<_Ty, _Alloc>::iterator vector<_Ty, _Alloc>::emplace(const_iterator _position, _ARGS &&... _args)
+    typename vector<_Ty, _Alloc>::iterator vector<_Ty, _Alloc>::emplace(const_iterator _position, _ARGS &&..._args)
     {
         auto _n = _position - cbegin();
         allocator_type alloc;
@@ -690,7 +689,7 @@ namespace ljq
 
     template <class _Ty, typename _Alloc>
     template <typename... _ARGS>
-    void vector<_Ty, _Alloc>::emplace_back(_ARGS &&... _args)
+    void vector<_Ty, _Alloc>::emplace_back(_ARGS &&..._args)
     {
         allocator_type alloc;
         if (end_of_storage == finish)
@@ -711,4 +710,4 @@ namespace ljq
         alloc.construct(finish, std::forward<_ARGS>(_args)...);
         ++finish;
     }
-} // namespace ljq
+} // namespace htd
