@@ -172,12 +172,65 @@ delete ptr1;
 
 #### 2.14、shared_ptr
 
+​		顾名思义，shared_ptr是共享型智能指针。即多个shared_ptr变量可以托管同一个new出来的指针变量。
+
+```c++
+class A
+{
+public:
+    int i;
+    A(int n) : i(n){};
+    ~A() { cout << i << " "
+                << "destructed" << endl; }
+    void print() { cout << i << endl; }
+};
+
+void func(std::shared_ptr<A> ptr)
+{
+    ptr->print();
+}
+
+int main()
+{
+    cout << "================test================" << endl;
+
+    std::shared_ptr<A> ptr1(new A(25));
+    std::shared_ptr<A> ptr2(ptr1);
+    std::shared_ptr<A> ptr3(new A(66));
+    std::shared_ptr<A> ptr4;
+
+    ptr4 = ptr1;
+    func(ptr4);
+    ptr4 = ptr3;
+    func(ptr4);
+
+    return 0;
+}
+```
+
+​		输出结果为：
+
+```c++
+================test================
+25
+66
+66 destructed
+25 destructed
+```
+
+​		可以看到，调用func函数结束后实参析构并没有直接释放指针，shared_ptr内部会维护一个reference引用计数，代表有多少个变量同时托管这个指针，因为main函数里的ptr4仍然在托管着，所以func的ptr析构并没有释放内存，而是在程序运行完所以reference计数为0后释放。同时也不用思考因为独占性而要时刻注意指针转移的问题。
+
+​		这个是很符合之前没有用RAII的编程思维的，当资源同时被多个变量托管时，只有全部变量都消亡时才释放资源。 不仅shared_ptr理应如此，绝大多数情况下用RAII来托管资源的都建议如此。
+
+​		当然，现在都用传参都用引用和右值引用，但相较于auto_ptr，其安全性，逻辑性好太多，都建议完全不要用auto_ptr。
+
 #### 2.15、unique_ptr
 
 ### reference
 
 - [C++ lock_guard 互斥锁](https://www.cnblogs.com/ybqjymy/p/12357617.html)
 - [[c++11]多线程编程(五)——unique_lock](https://www.jianshu.com/p/34d219380d90)
+- [C++11 shared_ptr（智能指针）详解](http://c.biancheng.net/view/430.html)
 
 ## 三、c++14
 
