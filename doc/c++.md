@@ -254,11 +254,73 @@ int main()
 
 右值：不能取到其变量或者表达式的地址，在编程上看来是编译器产生的某一时刻的临时对象。
 
+### 2.3、类型转换
+
+#### 2.3.1、const_cast
+
+​		`const_cast<type_id> (expression)`
+
+​		用于把指向const或者volatile类型的变量的指针转换为指向非const类型的变量的指针。目的就是为了可以修改变量，这个比较简单，看例子跑一遍就懂。
+
+```c++
+int main()
+{
+    cout << "================test================" << endl;
+    cout << "============ c语言的转换，编译器会优化导致不一样的结果" << endl;
+    const int num = 15;
+    int *pNum = (int *)&num; // &num 是 const int * 类型指针，强转之后通过pNum修改num的值
+    *pNum = 25;
+    cout << "num: " << num << ", *pNum: " << *pNum << endl;
+
+    cout << "============ c语言的转换，类似于函数传参" << endl;
+    int number1 = 15;
+    const int number = number1;
+    int *pnumber = (int *)&number; // &num 是 const int * 类型指针，强转之后通过pNum修改num的值
+    *pnumber = 35;
+    cout << "number: " << number << ", *pnumber: " << *pnumber << endl;
+
+    cout << endl;
+    cout << "============ c++ const_cast，指针和引用都可以" << endl;
+    int j = 0;
+    const int i = j;
+    int &k = const_cast<int &>(i);
+    k++;
+    cout << "i: " << i << endl;
+
+    string a = "123";
+    char *p = const_cast<char *>(a.c_str());
+    strcpy(p, "abc");
+    cout << "a.c_str(): " << a.c_str() << endl;
+
+    return 0;
+}
+```
+
+​		运行结果为：
+
+```
+================test================
+============ c语言的转换，编译器会优化导致不一样的结果
+num: 15, *pNum: 25
+============ c语言的转换，类似于函数传参
+number: 35, *pnumber: 35
+
+============ c++ const_cast，指针和引用都可以
+i: 1
+a.c_str(): abc
+```
+
+#### 2.3.2、static_cast
+
+
+
 ### reference
 
 - [C++ lock_guard 互斥锁](https://www.cnblogs.com/ybqjymy/p/12357617.html)
 - [[c++11]多线程编程(五)——unique_lock](https://www.jianshu.com/p/34d219380d90)
 - [C++11 shared_ptr（智能指针）详解](http://c.biancheng.net/view/430.html)
+- [百度百科const_cast](https://baike.baidu.com/item/const_cast/4473154?fr=aladdin)
+- [const_cast的用法与测试](https://www.cnblogs.com/qiuchangyong/p/10028765.html)
 
 ## 三、c++14
 
