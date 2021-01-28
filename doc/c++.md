@@ -256,21 +256,33 @@ int main()
 
 ### 2.3、类型转换
 
+​		c++新增了几种类型的转换，以替代c风格的转换，原因是c风格的转换有太多的不安全性。
+
+​		类型转换其实就是告诉编译器应该重新以什么样的形式来解释原先的变量。大概有几种情况。
+
+- 都是数值型，但占用的内存大小不一样。
+
+  `char c = 8;int a = (int)c;`原本c是占用1个字节的char变量，赋值给a，因为a是4个字节，所以编译器会把c前补3个字节的0，赋值为a，因为精度上没有损失，所以不加强转也不会报错或警告，属于隐式转换。
+
+​		反过来就不一样了，`int a = 8;char a = (char)c;`
+
 #### 2.3.1、const_cast
 
 ​		`const_cast<type_id> (expression)`
 
-​		用于把指向const或者volatile类型的变量的指针转换为指向非const类型的变量的指针。目的就是为了可以修改变量，这个比较简单，看例子跑一遍就懂。
+​		用于把指向const或者volatile类型的变量的指针转换为指向非const类型的变量的指针。目的就是为了可以修改变量，注意，这意味在它在其他方面会有很大的限制，比如不能转变类型。
+
+​		这个比较简单，看例子跑一遍就懂。
 
 ```c++
 int main()
 {
     cout << "================test================" << endl;
-    cout << "============ c语言的转换，编译器会优化导致不一样的结果" << endl;
+    cout << "============ c语言的转换" << endl;
     const int num = 15;
     int *pNum = (int *)&num; // &num 是 const int * 类型指针，强转之后通过pNum修改num的值
     *pNum = 25;
-    cout << "num: " << num << ", *pNum: " << *pNum << endl;
+    cout << "num: " << num << ", *pNum: " << *pNum << endl; // num初始化值是const，所以是不会改变的
 
     cout << "============ c语言的转换，类似于函数传参" << endl;
     int number1 = 15;
@@ -300,7 +312,7 @@ int main()
 
 ```
 ================test================
-============ c语言的转换，编译器会优化导致不一样的结果
+============ c语言的转换
 num: 15, *pNum: 25
 ============ c语言的转换，类似于函数传参
 number: 35, *pnumber: 35
@@ -312,7 +324,9 @@ a.c_str(): abc
 
 #### 2.3.2、static_cast
 
+​		static_cast <type-id>( expression )
 
+​		静态转换，这是在编译的时候编译器检查的转换，与之对应的是动态转换(dynamic_cast),它会在运行时转换。
 
 ### reference
 
@@ -321,6 +335,7 @@ a.c_str(): abc
 - [C++11 shared_ptr（智能指针）详解](http://c.biancheng.net/view/430.html)
 - [百度百科const_cast](https://baike.baidu.com/item/const_cast/4473154?fr=aladdin)
 - [const_cast的用法与测试](https://www.cnblogs.com/qiuchangyong/p/10028765.html)
+- [百度百科static_cast](https://baike.baidu.com/item/static_cast/4472966?fr=aladdin)
 
 ## 三、c++14
 
