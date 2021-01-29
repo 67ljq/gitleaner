@@ -22,6 +22,10 @@
 
 ​		见 [2.1、RAII](#2.1、RAII)
 
+### 1.3、虚函数表
+
+​		虚函数表可以说是c++实现多台的基石，理解虚函数表能更深刻的认识多态性的本质。
+
 ## 二、c++11
 
 ### 2.1、RAII
@@ -264,7 +268,17 @@ int main()
 
   `char c = 8;int a = (int)c;`原本c是占用1个字节的char变量，赋值给a，因为a是4个字节，所以编译器会把c前补3个字节的0，赋值为a，因为精度上没有损失，所以不加强转也不会报错或警告，属于隐式转换。
 
-​		反过来就不一样了，`int a = 8;char a = (char)c;`
+​		反过来就不一样了，`int a = 8;char a = (char)c;`现在a是4字节的int变量，如果要赋值为1个字节的char变量，怎么赋值？所以编译器或给出错误，或给出警告。这里强转那么编译器会截断最后的1个字节，并且按照char来解释这个字节中的内容。这种情况下会发生精度损失，是很常见的情形，一般而言不会有太大的像程序挂掉的问题，但有可能因为精度损失导致得不到想要的结果。
+
+- 父类和子类的互相转换
+
+  父子类转换一般用于多态，但也有情况是逆向<下行>转换的。下行转换即父类指针赋值给子类指针是很不安全的，因为有可能子类扩展了一些方法和成员变量，而父类是没有，所以调用的时候会按照子类的内存分布模型去访问对应的偏移，但子类扩展的这些东西在父类的内存模型中是没有的，会造成未知错误。
+
+- 完全不相干的类型转换
+
+  毫无疑问，这种情况下是最不安全的，可能系统底层的代码会用到，一般而言，联合体对于上层代码而言足够了。
+
+  c++把类型转换归类，提倡用新增的类型转换而不是原来c的，用以提高安全性。
 
 #### 2.3.1、const_cast
 
@@ -326,7 +340,109 @@ a.c_str(): abc
 
 ​		static_cast <type-id>( expression )
 
-​		静态转换，这是在编译的时候编译器检查的转换，与之对应的是动态转换(dynamic_cast),它会在运行时转换。
+​		静态转换，这是在编译的时候编译器检查的转换，与之对应的是动态转换(dynamic_cast),它会在运行时转换。static_cast提供相关联的基本类型的转换，比如数值型，带有继承关系的类的转换。它不能把类型的const，volatile属性去掉，这是`const_cast`需要做的事，也不能转换为另一个不相干的类，因为这需要从内存二进制层面来重新解释，新标准c++11把它视为另一个级别的转换，即`reinterpret_cast`。
+
+```c++
+class A
+{
+public:
+    int i;
+    A() = default;
+    A(int n) : i(n){};
+    ~A() { cout << i << " "
+                << "destructed" << endl; }
+    void print() { cout << i << endl; }
+};
+
+class B : public A
+{
+};
+
+int main()
+{
+    cout << "================test================" << endl;
+    float f = 2155558.895;
+    cout << "static_cast<double>(f) = " << static_cast<double>(f) << endl;
+    cout << "static_cast<long>(f) = " << static_cast<long>(f) << endl;
+    cout << "static_cast<int>(f) = " << static_cast<int>(f) << endl;
+    cout << "static_cast<short>(f) = " << static_cast<short>(f) << endl;
+    cout << "static_cast<char>(f) = " << static_cast<char>(f) << endl;
+    cout << endl;
+
+    // char *pC = static_cast<char *>(&f); // 报错：类型转换无效C/C++
+    void *p = static_cast<void *>(&f);
+    char *pC = static_cast<char *>(p);
+    cout << "*pC = " << pC << " *pC = " << *pC << endl;
+
+    B b;
+    A &a = b;
+    // B &b1 = a;                   // 报错：无法用 "A" 类型的值初始化 "B &" 类型的引用(非常量限定)
+    B &b2 = static_cast<B &>(a); // 可以进行指针或引用的下行转换
+
+    return 0;
+}
+```
+
+​		输出为：
+
+```
+================test================
+static_cast<double>(f) = 2.15556e+06
+static_cast<long>(f) = 2155559
+static_cast<int>(f) = 2155559
+static_cast<short>(f) = -32768
+static_cast<char>(f) = 
+```
+
+​		这个都是在编译时编译器进行的检测，安全性大多数情况下都需要自己判断。
+
+#### 2.3.3、dynamic_cast
+
+​		`dynamic_cast <type-id> (expression)`
+
+​		动态转换，它会在运行时才判断，主要是针对是否有继承关系。我们在运用多态时一般把派生类指针或引用赋值给基类的指针或引用。反过来，也有可能要恢复原来的类型，前面已经说过这样转换是相当危险的，`dynamic_cast`为我们提供了很大的便利。
+
+```c++
+class B
+{
+public:
+    int m_iNum;
+    virtual void foo() {}
+};
+
+class D : public B
+{
+public:
+    char *m_szName[100];
+};
+
+void func(B *pb)
+{
+    D *pd1 = static_cast<D *>(pb);
+    D *pd2 = dynamic_cast<D *>(pb);
+    cout << "======== pd1:" << pd1 << " ======== pd2:" << pd2 << endl;
+}
+
+int main()
+{
+    cout << "================test================" << endl;
+
+    func(new D());
+    func(new B());
+
+    return 0;
+}
+```
+
+​		结果为：
+
+```
+================test================
+======== pd1:0x1f80b8 ======== pd2:0x1f80b8
+======== pd1:0x1f8258 ======== pd2:0
+```
+
+​		当调用`func(new D());`时，pb实际指向的是一个D类，static_cast和dynamic_cast都可以转换成功，但当调用`func(new B());`时，pb实际指向的是一个B类，static_cast在编程时就已经转换了，编译器发现pb的类型和要转换成的类型有派生关系，便直接进行了转换，而dynamic_cast则是在运行的时候判断pb是否确实指向了一个D类，**因为它的判断涉及虚函数表，而且动态性，所以它要在运行时才能判断，而且基类要有虚函数才行（有了虚函数才会有虚函数表），而且转换的对象只能是类对象的指针或引用**，它根据虚函数表判断出了pb所指向的虚函数表实际内容并非是D类的，它并没有抛出异常，而是返回了NULL。
 
 ### reference
 
@@ -336,6 +452,7 @@ a.c_str(): abc
 - [百度百科const_cast](https://baike.baidu.com/item/const_cast/4473154?fr=aladdin)
 - [const_cast的用法与测试](https://www.cnblogs.com/qiuchangyong/p/10028765.html)
 - [百度百科static_cast](https://baike.baidu.com/item/static_cast/4472966?fr=aladdin)
+- [百度百科dynamic_cast](https://baike.baidu.com/item/dynamic_cast)
 
 ## 三、c++14
 
