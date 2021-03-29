@@ -1,5 +1,9 @@
 # c++
 
+
+
+[TOC]
+
 ​		c++这门语言已经有几十个年头了， 
 
 ## 一、c++98、03
@@ -25,6 +29,430 @@
 ### 1.3、虚函数表
 
 ​		虚函数表可以说是c++实现多台的基石，理解虚函数表能更深刻的认识多态性的本质。
+
+***以下是转载：***[C++中的虚函数以及虚函数表](https://www.cnblogs.com/yinbiao/p/10987640.html)
+
+#### 1.31、虚函数的定义
+
+​		被virtual关键字修饰的成员函数，目的是为了实现多态
+
+ps：关于多态【接口和实现分离，父类指针指向子类的实例，然后通过父类指针调用子类的成员函数，这样可以让父类指针拥有多种形态，所以称之为多态】
+
+#### 1.32、虚函数表
+
+​		该表为一个类的虚函数的地址表，用于解决继承和覆盖的问题
+
+​				1.拥有虚函数的类才有虚函数表
+
+​				2.虚函数表属于类，然后类的所有对象通过虚函数表指针共享类的虚函数表
+
+​				3.虚函数表的作用：当使用父类指针来操作子类对象时，虚函数表就像一个地图一样，指明了实际所应该调用的函数
+
+​				4.c++编译器保证虚函数表的指针存在于对象实例中最前面的位置（为了保证在多层继承或者多重继承的情况下获得函数表的性能），这意味着我们可以通过对象实例的地址得到虚函数表，然后就可以遍历其中的虚函数指针，并且调用响应的虚函数
+
+ps：多重继承：多个父类，多层继承：父类还存在父类
+
+![01](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093432959-984189171.jpg)
+
+【通过虚函数表，遍历虚函数指针，调用响应的虚函数】
+
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+class Base
+{
+public:
+    virtual void f()
+    {
+        cout << "Base::f" << endl;
+    }
+    virtual void g()
+    {
+        cout << "Base::g" << endl;
+    }
+    virtual void h()
+    {
+        cout << "Base::h" << endl;
+    }
+
+};
+typedef void(*Fun)(void);
+Base b;
+Fun pFun = NULL;
+
+int main()
+{
+    cout << "虚函数表地址：" << (int*)(&b) << endl;
+    cout << "虚函数表 — 第一个函数地址：" << (int*)*(int*)(&b) << endl;
+
+    //通过虚函数表调用虚函数
+    pFun = (Fun)*((int*)*(int*)(&b));   // Base::f()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&b)+1);  // Base::g()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&b)+2);  // Base::h()
+    pFun();
+}
+```
+
+结果：
+
+```
+虚函数表地址：0x477008
+虚函数表 — 第一个函数地址：0x473668
+Base::f
+Base::g
+Base::h
+```
+
+以上为无继承情况
+
+**1.单层继承无虚函数覆盖的情况**
+
+![02](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093434460-1525406000.jpg)
+
+![03](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093435475-219298640.jpg)
+
+​		1）虚函数按照声明顺序放入表中
+
+​		2）父类虚函数在前，子类虚函数在后
+
+​		3）末尾点号为虚函数表的结尾标识符，在不同编译器下值不同
+
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+class Base
+{
+public:
+    virtual void f()
+    {
+        cout << "Base::f" << endl;
+    }
+    virtual void g()
+    {
+        cout << "Base::g" << endl;
+    }
+    virtual void h()
+    {
+        cout << "Base::h" << endl;
+    }
+
+};
+class Base_son:public Base
+{
+public:
+    virtual void f1()
+    {
+        cout << "Base_son::f1" << endl;
+    }
+    virtual void g1()
+    {
+        cout << "Base_son::g1" << endl;
+    }
+    virtual void h1()
+    {
+        cout << "Base_son::h1" << endl;
+    }
+
+};
+
+
+typedef void(*Fun)(void);
+Base_son d;
+
+Fun pFun = NULL;
+
+int main()
+{
+    cout << "虚函数表地址：" << (int*)(&d) << endl;
+    cout << "虚函数表 — 第一个函数地址：" << (int*)*(int*)(&d) << endl;
+
+    //通过虚函数表调用虚函数
+    pFun = (Fun)*((int*)*(int*)(&d));   // Base::f()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+1);  // Base::g()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+2);  // Base::h()
+    pFun();
+
+    pFun =(Fun)*((int*)*(int*)(&d)+3);  // Base_son::f1()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+4);  // Base_son::g1()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+5);  // Base_son::h1()
+    pFun();
+
+    return 0;
+}
+```
+
+结果：
+
+```
+虚函数表地址：0x477008
+虚函数表 — 第一个函数地址：0x473668
+Base::f
+Base::g
+Base::h
+Base_son::f1
+Base_son::g1
+Base_son::h1
+```
+
+**2.单层继承有虚函数覆盖的情况**
+
+![04](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093436704-331074241.jpg)
+
+![05](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093437718-1593637875.jpg)
+
+1）覆盖的f()函数被放到了虚函数表中原父类虚函数的位置
+
+2）没有被覆盖的函数没有变化
+
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+class Base
+{
+public:
+    virtual void f()
+    {
+        cout << "Base::f" << endl;
+    }
+    virtual void g()
+    {
+        cout << "Base::g" << endl;
+    }
+    virtual void h()
+    {
+        cout << "Base::h" << endl;
+    }
+
+};
+class Base_son:public Base
+{
+public:
+    virtual void f()
+    {
+        cout << "Base_son::f" << endl;
+    }
+    virtual void g1()
+    {
+        cout << "Base_son::g1" << endl;
+    }
+    virtual void h1()
+    {
+        cout << "Base_son::h1" << endl;
+    }
+
+};
+
+
+typedef void(*Fun)(void);
+Base_son d;
+
+Fun pFun = NULL;
+
+int main()
+{
+    cout << "虚函数表地址：" << (int*)(&d) << endl;
+    cout << "虚函数表 — 第一个函数地址：" << (int*)*(int*)(&d) << endl;
+
+    //通过虚函数表调用虚函数
+    pFun = (Fun)*((int*)*(int*)(&d));   // Base_son::f()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+1);  // Base::g()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+2);  // Base::h()
+    pFun();
+
+    pFun =(Fun)*((int*)*(int*)(&d)+3);  // Base_son::g1()
+    pFun();
+    pFun =(Fun)*((int*)*(int*)(&d)+4);  // Base_son::h1()
+    pFun();
+
+    return 0;
+}
+```
+
+结果：
+
+```
+虚函数表地址：0x477008
+虚函数表 — 第一个函数地址：0x473650
+Base_son::f
+Base::g
+Base::h
+Base_son::g1
+Base_son::h1
+```
+
+**通过父类指针指向子类实例，子类覆盖父类方法，然后调用子类的方法，这样就实现了多态**
+
+```
+Base *b=new Base_son(); b->f();
+```
+
+**3.多重继承无虚函数覆盖**
+
+![06](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093438873-1057072047.jpg)
+
+![07](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093440173-2022399978.jpg)
+
+1）每个父类都有自己的虚函数表
+
+2）子类的虚函数被放到第一个父类的虚函数表中
+
+**这样做是为了解决不同的父类类型指针指向同一个子类实例，而能够调用到实际的函数**
+
+**4.多重继承存在虚函数覆盖**
+
+![08](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093441346-693434715.jpg)
+
+![09](https://img2018.cnblogs.com/blog/1301290/201906/1301290-20190607093442410-190647927.jpg)
+
+1）父类虚函数表中被覆盖的虚函数全部被替换成了子类的覆盖虚函数
+
+**这样我们就通过父类指向子类从而访问子类的f()了**
+
+```c++
+Derive d;
+Base1 *b1 = &d;
+Base2 *b2 = &d;
+Base3 *b3 = &d;
+b1->f(); //Derive::f()
+b2->f(); //Derive::f()
+b3->f(); //Derive::f()
+ 
+b1->g(); //Base1::g()
+b2->g(); //Base2::g()
+b3->g(); //Base3::g()
+```
+
+**使用虚函数表可以做一些违反c++语义的事情：**
+
+**1）通过父类指针访问子类自己的虚函数**
+
+子类的虚函数X在父类中没有，所以子类的虚函数X没有覆盖父类的虚函数，但是如果我们通过父类的指针来访问子类自己的虚函数的编译器会报错
+
+```
+Base1 *b1 = new Derive();
+b1->f1();  //编译出错
+```
+
+**但是我们通过虚函数表可以做到这种违背C++语义的事情：使用父类指针访问子类自己的虚函数**
+
+**2）访问父类non-public的虚函数**
+
+如果父类的虚函数是private或protected的，但是这些feipublic的父类虚函数同样会存在于虚函数表中，所以我们可以通过访问虚函数表访问到这些虚函数
+
+附上多重继承有虚函数覆盖的样例代码：
+
+```c++
+#include <iostream>
+using namespace std;
+ 
+class Base1 {
+public:
+            virtual void f() { cout << "Base1::f" << endl; }
+            virtual void g() { cout << "Base1::g" << endl; }
+            virtual void h() { cout << "Base1::h" << endl; }
+ 
+};
+ 
+class Base2 {
+public:
+            virtual void f() { cout << "Base2::f" << endl; }
+            virtual void g() { cout << "Base2::g" << endl; }
+            virtual void h() { cout << "Base2::h" << endl; }
+};
+ 
+class Base3 {
+public:
+            virtual void f() { cout << "Base3::f" << endl; }
+            virtual void g() { cout << "Base3::g" << endl; }
+            virtual void h() { cout << "Base3::h" << endl; }
+};
+ 
+class Derive : public Base1, public Base2, public Base3 {
+public:
+            virtual void f() { cout << "Derive::f" << endl; }
+            virtual void g1() { cout << "Derive::g1" << endl; }
+};
+ 
+typedef void(*Fun)(void);
+ 
+int main()
+{
+            Fun pFun = NULL;
+ 
+            Derive d;
+            int** pVtab = (int**)&d;
+ 
+            //Base1's vtable
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+0)+0);
+            pFun = (Fun)pVtab[0][0];
+            pFun();
+ 
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+0)+1);
+            pFun = (Fun)pVtab[0][1];
+            pFun();
+ 
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+0)+2);
+            pFun = (Fun)pVtab[0][2];
+            pFun();
+ 
+            //Derive's vtable
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+0)+3);
+            pFun = (Fun)pVtab[0][3];
+            pFun();
+ 
+            //The tail of the vtable
+            pFun = (Fun)pVtab[0][4];
+            cout<<pFun<<endl;
+ 
+            //Base2's vtable
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+1)+0);
+            pFun = (Fun)pVtab[1][0];
+            pFun();
+ 
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+1)+1);
+            pFun = (Fun)pVtab[1][1];
+            pFun();
+ 
+            pFun = (Fun)pVtab[1][2];
+            pFun();
+ 
+            //The tail of the vtable
+            pFun = (Fun)pVtab[1][3];
+            cout<<pFun<<endl;
+ 
+            //Base3's vtable
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+1)+0);
+            pFun = (Fun)pVtab[2][0];
+            pFun();
+ 
+            //pFun = (Fun)*((int*)*(int*)((int*)&d+1)+1);
+            pFun = (Fun)pVtab[2][1];
+            pFun();
+ 
+            pFun = (Fun)pVtab[2][2];
+            pFun();
+ 
+            //The tail of the vtable
+            pFun = (Fun)pVtab[2][3];
+            cout<<pFun<<endl;
+ 
+            return 0;
+}
+```
+
+#### 1.33、关于虚函数和普通函数
+
+​		**1.类中的虚函数是动态生成的，由虚函数表的指向进行访问，不为类的对象分配内存，没有虚函数表，就无法访问虚函数**
+
+​		**2.类中的普通函数静态生成，不为类的对象分配内存也可访问**
 
 ## 二、c++11
 
@@ -274,6 +702,167 @@ a+b = 4;
 
 #### 2.2.2、move semantic
 
+- ***这里是转载		[c++11 中的 move 与 forward](https://www.cnblogs.com/catch/p/3507883.html)***
+
+​		关于 lvaue 和 rvalue，在 c++11 以前存在一个有趣的现象：T&  指向 lvalue (左传引用)， const T& 既可以指向 lvalue 也可以指向 rvalue。但却没有一种引用类型，可以限制为只指向 rvalue。这乍看起来好像也不是很大的问题，但实际与看起来不一样，右值引用的缺失有时严重限制了我们在某些情况下，写出更高效的代码。举个粟子，假设我们有一个类，它包含了一些资源：
+
+```
+class holder
+{
+     public:
+ 
+          holder()
+          {
+               resource_ = new Resource();
+          }
+          ~holder()
+          {
+               delete resource_;
+          }
+
+          holder(const holder& other)
+          {
+                resource_ = new Resource(*other.resource_);
+          }
+
+          holder(holder& other)
+          {
+                resource_ = new Resource(*other.resource_);
+          }
+
+          holder& operator=(const holder& other)
+          {
+                delete resource_;
+                resource_ = new Resource(*other.resource_);                
+                return *this;
+          }
+           holder& operator=(holder& other)
+          {
+                delete resource_;
+                resource_ = new Resource(*other.resource_);                
+                return *this;
+          }
+          private:
+
+               Resource* resource_;
+};
+```
+
+​		这是个 RAII 类，构造函数与析构函数分别负责资源的获取与释放，因此也相应处理了拷贝构造函数 (copy constructor) 和重载赋值操作符 (assignment operator)，现在假设我们这样来使用这个类。
+
+```
+// 假设存在如下一个函数，返回值为 holder 类型的临时变量
+holder get_holder() { return holder(); }
+
+holder h;
+foo(h);
+h = get_holder();
+```
+
+​		理想情况下（不考虑返回值优化等因素)，这一小段代码的最后一条语句做了如下三件事情：
+
+​			1)  销毁 h 中的资源。
+
+​			2)  拷由 get_holder() 返回的资源。
+
+​			3)  销毁 get_holder() 返回的资源。
+
+​		显然我们可以发现这些事情中有些是不必要的：假如我们可以直接交换 h 中的资源与 get_holder() 返回的对象中的资源，那我们就可以直接省略掉第二步中的拷贝动作了。而这里之所以交换能达到相同的效果，是因为 get_holder() 返回的是临时的变量，是个 rvalue，它的生命周期通常来说很短，具体在这里，就是赋值语句完成之后，任何人都没法再引用该 rvalue，它马上就要被销毁了，它所包含的资源也无法再被访问。而如果是像下面这样的用法，我们显然不可以直接交换两者的资源：
+
+```
+holder h1;
+holder h2;
+
+h1 = h2;
+
+foo(h2);
+```
+
+​		因为 h2 是个 lvalue，它的生命周期较长，在赋值语句结束之后，变量仍然存在，还有可能要被别的地方使用。因此，rvalue 的短生命周期给我们提供了在某些情况优化代码的可能。但这种可能在 c++11 以前是没法利用到的，因为我们没法在代码中对 rvalue 区别对待：在函数体中，程序员无法分辨传进来的参数到底是不是 rvalue，我们缺少一个 rvalue 的标记。
+
+​		回忆一下，T& 指向的是 lvalue，而 const T& 指向的，却可能是 lvalue 或 rvalue，我们没有任何方式能够确认当前参数是不是 rvalue！为了解决这个问题，c++11 中引入了一个新的引用类型: some_type_t &&，这种引用指向的变量是个 rvalue， 有了这个引用类型，我们前面提到的问题就迎刃而解了。
+
+```
+class holder
+{
+     public:
+ 
+          holder()
+          {
+               resource_ = new Resource();
+          }
+          ~holder()
+          {
+               if (resource_) delete resource_;
+          }
+
+          holder(const holder& other)
+          {
+                resource_ = new Resource(*other.resource_);
+          }
+
+          holder(holder& other)
+          {
+                resource_ = new Resource(*other.resource_);
+          }
+          
+          holder(holder&& other)
+          {
+                resource_ = other.resource_;
+                other.resource_ = NULL;
+          }
+
+          holder& operator=(const holder& other)
+          {
+                delete resource_;
+                resource_ = new Resource(*other.resource_);　　　　　　　　　 return *this;
+          }
+
+          holder& operator=(holder& other)
+          {
+                delete resource_;
+                resource_ = new Resource(*other.resource_);                return *this;
+          }
+
+          holder& operator=(holder&& other)
+          {
+                std::swap(resource_, other.resource_);                return *this;
+          }
+
+          private:
+
+               Resource* resource_;
+};
+```
+
+​		因为有了右值引用，当我们再写如下代码的时候：
+
+```
+holder h1;
+holder h2;
+
+h1 = h2; // 调用operator(holder&);
+h1 = get_holder(); // 调用operator(holder&&)
+```
+
+​		编译器就能根据当前参数的类型选择相应的函数，显然后者的实现是更高效的。写到里，有的人也许会有疑问:  some_type_t&& ref  指向的是右值（右值引用），那 ref 本身在函数内是左值还是右值？具体来说就是如下代码中，第三行所调用的是 operator=(holder&) 还是 operator=(holder&&)?
+
+```
+1 holder& operator=(holder&& other)
+2 {
+3       holder h = other;
+4       return *this;
+5 }
+```
+
+​		这个问题的本质还是怎么区分 rvalue？ c++11 中对 rvalue 作了明确的定义：
+
+```
+Things that are declared as rvalue reference can be lvalues or rvalues. The distinguishing criterion is: if it has a name, then it is an lvalue. Otherwise, it is an rvalue.
+```
+
+
+
 #### 2.2.3、perfect forward
 
 ### 2.3、类型转换
@@ -462,7 +1051,13 @@ int main()
 
 ​		当调用`func(new D());`时，pb实际指向的是一个D类，static_cast和dynamic_cast都可以转换成功，但当调用`func(new B());`时，pb实际指向的是一个B类，static_cast在编程时就已经转换了，编译器发现pb的类型和要转换成的类型有派生关系，便直接进行了转换，而dynamic_cast则是在运行的时候判断pb是否确实指向了一个D类，**因为它的判断涉及虚函数表，而且动态性，所以它要在运行时才能判断，而且基类要有虚函数才行（有了虚函数才会有虚函数表），而且转换的对象只能是类对象的指针或引用**，它根据虚函数表判断出了pb所指向的虚函数表实际内容并非是D类的，它并没有抛出异常，而是返回了NULL。
 
+####  2.3.4、reinterpret_cast
+
+
+
 ### reference
+
+- [C++中的虚函数以及虚函数表](https://www.cnblogs.com/yinbiao/p/10987640.html)
 
 - [C++ lock_guard 互斥锁](https://www.cnblogs.com/ybqjymy/p/12357617.html)
 

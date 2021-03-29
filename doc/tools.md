@@ -16,15 +16,11 @@
 
   一款查看分析 音频的软件
 
-
-
-## 视频
-
 ### yuv图片
 
 - [常用图像像素格式 NV12、NV2、I420、YV12、YUYV](https://blog.csdn.net/cgwang_1580/article/details/79595958)
 
-## 三、ffmpeg
+## ffmpeg
 
 - **ffmpeg ffplay 播放.pcm .g711a .g711u**
 
@@ -37,3 +33,9 @@ ffplay -i test.g711u  -f mulaw  -ac 1  -ar 8000
 **参考：**
 
 - [ffmpeg ffplay 播放.pcm .g711a .g711u](https://blog.csdn.net/qq_38795209/article/details/107414626)
+
+## mysql
+
+- 安装
+
+  [免安装版的Mysql](https://www.cnblogs.com/winton-nfs/p/11524007.html#_caption_0)
