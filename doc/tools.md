@@ -30,9 +30,18 @@ ffplay -i test.g711a  -f alaw  -ac 1  -ar 8000
 ffplay -i test.g711u  -f mulaw  -ac 1  -ar 8000
 ```
 
+- **ffmpeg改变jpg,png,webp图片大小**
+
+```
+ffmpeg -i input.jpg -vf scale=320:240 output_320x240.jpg
+ffmpeg -i input.png -vf scale=320:240 output_320x240.png
+ffmpeg -i input.webp -vf scale=320:240 output_320x240.webp
+```
+
 **参考：**
 
 - [ffmpeg ffplay 播放.pcm .g711a .g711u](https://blog.csdn.net/qq_38795209/article/details/107414626)
+- [ffmpeg改变jpg,png,webp图片大小](https://www.cnblogs.com/freedom-try/p/13991696.html)
 
 ## mysql
 

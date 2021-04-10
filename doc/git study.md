@@ -2091,6 +2091,23 @@ git reset --hard branch2
 2. 调用 git stash –keep-index。只会备份那些没有被add的文件。
 3. 调用 git reset 取消已经add的文件的备份，继续自己的工作。
 
+### 5.4、git checkout 命令详解
+
+​		在日常的git操作中，git checkout——检出，是我们的常用命令。最为常用的两种情形是创建分支和切换分支。
+
+在下面的命令中，使用了一些简写，在这里说明一下：
+
+```
+git st # git status
+git ci  # git commit
+git br # git branch
+git co # git checkout
+git mg # git merge
+git line # git log --oneline
+```
+
+
+
 ## 六、来源参考
 
 1. [实际项目中如何使用Git做分支管理](https://blog.csdn.net/ShuSheng0007/article/details/80791849?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.control&dist_request_id=2e82118d-cd9f-4ff7-bc4e-cd4ca98991e6&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.control)
@@ -2100,3 +2117,4 @@ git reset --hard branch2
 5. [Git HEAD detached from XXX 解决](https://blog.csdn.net/qq_43356428/article/details/98532158)
 6. [Git Reset 三种模式](https://www.jianshu.com/p/c2ec5f06cf1a)
 7. [git stash 用法总结和注意点](https://www.cnblogs.com/zndxall/archive/2018/09/04/9586088.html)
+8. [git checkout 命令详解](https://www.cnblogs.com/kuyuecs/p/7111749.html)
